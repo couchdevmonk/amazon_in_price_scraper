@@ -18,17 +18,17 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 url_array=[] #array for urls
-asin_array=['9386228491','0143426419','B07GC4LYYS'] #array for asin numbers
-#with open('asin_list.csv', 'r') as csvfile:
-#    asin_reader = csv.reader(csvfile)
-#    for row in asin_reader:
-#        url_array.append(row[0]) #This url list is an array containing all the urls from the excel sheet
-
+asin_array=[] #array for asin numbers
+with open('asin_list.csv', 'r') as csvfile:
+    asin_reader = csv.reader(csvfile,delimiter=',')
+    for row in asin_reader:
+        asin_array.append(row[0]) #This url list is an array containing all the urls from the excel sheet
+        print(asin_array)
 #The ASIN Number will be between the dp/ and another /
 start = 'dp/'
 end = '/'
-for url in url_array:
-    asin_array.append(url[url.find(start)+len(start):url.rfind(end)]) #this array has all the asin numbers
+#for url in url_array:
+#    asin_array.append(url[url.find(start)+len(start):url.rfind(end)]) #this array has all the asin numbers
 
 #declare the header.
 headers = {
@@ -43,22 +43,28 @@ for asin in asin_array:
     amazon_url="https://www.amazon.in/dp/"+asin #The general structure of a url
     response = session.get(amazon_url, headers=headers, verify=False) #get the response
     #print(response.text)
-    
+
 #    item_array.append(response.html.search()[0]) #Scraping template
 #    ' '.join(myString.split())
     title = ' '.join((response.html.search('<span id="productTitle" class="a-size-large">{}</span>'))).split()
-    title = " ".join(title)
+    #title = " ".join(title)
     item_array.append(title) #extract the title
-    
+#  Extracting the price from 2 known design layouts
     if response.html.search('a-color-price inlineBlock-display offer-price a-text-normal price3P"><span class="currencyINR">&nbsp;&nbsp;</span>{}<') != None:
         item_array.append(response.html.search('a-color-price inlineBlock-display offer-price a-text-normal price3P"><span class="currencyINR">&nbsp;&nbsp;</span>{}<')[0]) #Extracting the current price
+    elif response.html.search('a-color-price a-text-bold"><span class="currencyINR">&nbsp;&nbsp;</span> {}</span>') != None:
+        item_array.append(response.html.search('a-color-price a-text-bold"><span class="currencyINR">&nbsp;&nbsp;</span> {}</span>')[0])
     else:
-        item_array.append('Not found')
+        item_array.append('0')      #0 - Not found
+#Extracting the MRPs from the 2 known design layouts
     if response.html.search('<span class="a-color-secondary a-text-strike"><span class="currencyINR">&nbsp;&nbsp;</span> {}</span>') != None:
-        item_array.append(response.html.search('<span class="a-color-secondary a-text-strike"><span class="currencyINR">&nbsp;&nbsp;</span> {}</span>')[0]) #initial price
+        item_array.append(response.html.search('<span class="a-color-secondary a-text-strike"><span class="currencyINR">&nbsp;&nbsp;</span> {}</span>')[0]) #Exracting the listed MRP
     else:
-        item_array.append('Not found')
+        item_array.append('0')
     print(item_array)
+
+
+
     #print(response.html.search('a-color-price inlineBlock-display offer-price a-text-normal price3P"><span class="currencyINR">&nbsp;&nbsp;</span>{}<')[0])
     #Extracting the text containing the product details
 #print(all_items)
